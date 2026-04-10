@@ -28,66 +28,76 @@ async function ensureProfile(user, password) {
   if (error) throw error;
 }
 
+function renderConfigError(message) {
+  app.innerHTML = `<section class="card" style="max-width:720px;margin:10vh auto;">
+      <h2>Configuration requise</h2>
+      <p>${message}</p>
+      <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
+    </section>`;
+}
+
+async function redirectWithProfile(user) {
+  const profile = await getProfile(user.id);
+  redirectForRole(profile.role);
+}
+
 async function bootLogin() {
   if (!supabase) {
-    app.innerHTML = `
-      <section class="card" style="max-width:700px;margin:8vh auto;">
-        <h2>Configuration Supabase manquante</h2>
-        <p>Ajoute tes clés avant de te connecter :</p>
-        <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
-        <p class="muted">Vercel lit aussi automatiquement les variables via /api/env.</p>
-      </section>`;
+    renderConfigError('Supabase non configuré.');
     return;
   }
 
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      const profile = await getProfile(session.user.id);
-      redirectForRole(profile.role);
+      await redirectWithProfile(session.user);
       return;
     }
   } catch (error) {
-    app.innerHTML = `<section class="card" style="max-width:700px;margin:8vh auto;"><h2>Erreur de session</h2><p>${error.message}</p></section>`;
+    renderConfigError(`Erreur de session: ${error.message}`);
     return;
   }
 
   app.innerHTML = `
-    <section class="card" style="max-width:420px;margin:12vh auto;">
+    <section class="auth-shell card">
       <h1>FlowLeave</h1>
-      <p class="muted">Connexion à la plateforme de congés</p>
+      <p class="muted">Connectez-vous ou créez votre compte.</p>
       <form id="auth-form" class="grid">
         <label>Email<input name="email" type="email" required /></label>
-        <label>Mot de passe<input name="password" type="password" required /></label>
-        <button type="submit">Se connecter</button>
+        <label>Mot de passe<input name="password" type="password" minlength="6" required /></label>
+        <button type="submit">Connexion / Inscription</button>
       </form>
-      <p class="muted" style="margin:0;">Admin bootstrap: <strong>evan.sarrazin</strong> avec le mot de passe <strong>admin123</strong>.</p>
+      <p class="muted" style="margin:0;">Bootstrap admin: identifiant <strong>evan.sarrazin</strong> (ou evan.sarrazin@...) puis mot de passe de votre choix (6+).</p>
     </section>`;
 
-  document.getElementById('auth-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = new FormData(e.target);
-    const email = data.get('email');
-    const password = data.get('password');
+  document.getElementById('auth-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-    let { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      const signUpRes = await supabase.auth.signUp({ email, password });
-      error = signUpRes.error;
-      if (!error && signUpRes.data.user) {
-        await ensureProfile(signUpRes.data.user, password);
-        const role = getDefaultRole(signUpRes.data.user.email, password);
-        toast(`Compte créé avec le rôle ${role}. Vérifiez votre email si la confirmation est activée.`);
-      }
+    const formData = new FormData(event.target);
+    const email = String(formData.get('email') || '').trim();
+    const password = String(formData.get('password') || '');
+
+    if (password.length < 6) {
+      toast('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
     }
-    if (error) return toast(error.message);
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const profile = await getProfile(session.user.id);
-      redirectForRole(profile.role);
-    } catch (profileError) {
-      toast(`Compte authentifié mais profil introuvable: ${profileError.message}`);
+    const signIn = await supabase.auth.signInWithPassword({ email, password });
+    if (!signIn.error && signIn.data.user) {
+      await redirectWithProfile(signIn.data.user);
+      return;
+    }
+
+    const signUp = await supabase.auth.signUp({ email, password });
+    if (signUp.error) {
+      toast(signUp.error.message);
+      return;
+    }
+
+    toast('Compte créé. Si la confirmation email est active, validez votre adresse puis reconnectez-vous.');
+
+    if (signUp.data.user && signUp.data.session) {
+      await redirectWithProfile(signUp.data.user);
     }
   });
 }
