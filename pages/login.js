@@ -4,6 +4,28 @@ import { redirectForRole } from '../services/auth.js';
 import { toast } from '../components/ui.js';
 
 const app = document.getElementById('app');
+const ADMIN_BOOTSTRAP_IDENTIFIER = 'evan.sarrazin';
+
+function getDefaultRole(email) {
+  const normalized = (email || '').toLowerCase();
+  const localPart = normalized.split('@')[0];
+  return (normalized === ADMIN_BOOTSTRAP_IDENTIFIER || localPart === ADMIN_BOOTSTRAP_IDENTIFIER) ? 'admin' : 'employee';
+}
+
+async function ensureProfile(user) {
+  const profilePayload = {
+    id: user.id,
+    email: user.email,
+    role: getDefaultRole(user.email),
+    manager_id: null,
+    leave_mode: 'monthly_accrual',
+    hire_date: new Date().toISOString().slice(0, 10),
+    leave_balance: 0
+  };
+
+  const { error } = await supabase.from('users').upsert(profilePayload, { onConflict: 'id' });
+  if (error) throw error;
+}
 
 async function bootLogin() {
   if (!supabase) {
@@ -35,9 +57,10 @@ async function bootLogin() {
       <p class="muted">Connexion à la plateforme de congés</p>
       <form id="auth-form" class="grid">
         <label>Email<input name="email" type="email" required /></label>
-        <label>Mot de passe<input name="password" type="password" minlength="6" required /></label>
+        <label>Mot de passe<input name="password" type="password" required /></label>
         <button type="submit">Se connecter</button>
       </form>
+      <p class="muted" style="margin:0;">Le compte <strong>evan.sarrazin</strong> est créé en administrateur.</p>
     </section>`;
 
   document.getElementById('auth-form').addEventListener('submit', async (e) => {
@@ -50,7 +73,11 @@ async function bootLogin() {
     if (error) {
       const signUpRes = await supabase.auth.signUp({ email, password });
       error = signUpRes.error;
-      if (!error) toast('Compte créé. Vérifiez votre email si la confirmation est activée.');
+      if (!error && signUpRes.data.user) {
+        await ensureProfile(signUpRes.data.user);
+        const role = getDefaultRole(signUpRes.data.user.email);
+        toast(`Compte créé avec le rôle ${role}. Vérifiez votre email si la confirmation est activée.`);
+      }
     }
     if (error) return toast(error.message);
 
