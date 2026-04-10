@@ -4,10 +4,12 @@ import { redirectForRole } from '../services/auth.js';
 import { toast } from '../components/ui.js';
 
 const app = document.getElementById('app');
-const ADMIN_BOOTSTRAP_EMAIL = 'admin@admin.com';
+const ADMIN_BOOTSTRAP_IDENTIFIER = 'evan.sarrazin';
 
 function getDefaultRole(email) {
-  return email?.toLowerCase() === ADMIN_BOOTSTRAP_EMAIL ? 'admin' : 'employee';
+  const normalized = (email || '').toLowerCase();
+  const localPart = normalized.split('@')[0];
+  return (normalized === ADMIN_BOOTSTRAP_IDENTIFIER || localPart === ADMIN_BOOTSTRAP_IDENTIFIER) ? 'admin' : 'employee';
 }
 
 async function ensureProfile(user) {
@@ -58,7 +60,7 @@ async function bootLogin() {
         <label>Mot de passe<input name="password" type="password" required /></label>
         <button type="submit">Se connecter</button>
       </form>
-      <p class="muted" style="margin:0;">Le compte <strong>admin@admin.com</strong> est créé en administrateur.</p>
+      <p class="muted" style="margin:0;">Le compte <strong>evan.sarrazin</strong> est créé en administrateur.</p>
     </section>`;
 
   document.getElementById('auth-form').addEventListener('submit', async (e) => {
