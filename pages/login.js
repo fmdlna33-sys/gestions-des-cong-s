@@ -58,7 +58,7 @@ async function bootLogin() {
       <p class="muted">Connexion à la plateforme de congés</p>
       <form id="auth-form" class="grid">
         <label>Email<input name="email" type="email" required /></label>
-        <label>Mot de passe<input name="password" type="password" minlength="6" required /></label>
+        <label>Mot de passe<input name="password" type="password" required /></label>
         <button type="submit">Se connecter</button>
       </form>
       <p class="muted" style="margin:0;">Admin bootstrap: <strong>evan.sarrazin</strong> avec le mot de passe <strong>admin123</strong>.</p>
