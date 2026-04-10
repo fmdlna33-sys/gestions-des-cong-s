@@ -54,6 +54,19 @@ async function redirectWithProfile(user) {
   redirectForRole(profile.role);
 }
 
+function renderConfigError(message) {
+  app.innerHTML = `<section class="card" style="max-width:720px;margin:10vh auto;">
+      <h2>Configuration requise</h2>
+      <p>${message}</p>
+      <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
+    </section>`;
+}
+
+async function redirectWithProfile(user) {
+  const profile = await getProfile(user.id);
+  redirectForRole(profile.role);
+}
+
 async function bootLogin() {
   if (!supabase) {
     renderConfigError('Supabase non configuré.');
