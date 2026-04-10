@@ -58,13 +58,8 @@ alter table public.public_holidays enable row level security;
 create policy "users self read" on public.users
 for select using (auth.uid() = id);
 
-create policy "users managers read team" on public.users
-for select using (
-  exists (
-    select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('manager','admin')
-  )
-);
+create policy "users authenticated read" on public.users
+for select using (auth.role() = 'authenticated');
 
 create policy "users self upsert" on public.users
 for all using (auth.uid() = id) with check (auth.uid() = id);
