@@ -4,6 +4,29 @@ import { redirectForRole } from '../services/auth.js';
 import { toast } from '../components/ui.js';
 
 const app = document.getElementById('app');
+const ADMIN_BOOTSTRAP_IDENTIFIER = 'evan.sarrazin';
+
+function getDefaultRole(email, password) {
+  const normalized = (email || '').toLowerCase();
+  const localPart = normalized.split('@')[0];
+  const isBootstrapAdmin = (normalized === ADMIN_BOOTSTRAP_IDENTIFIER || localPart === ADMIN_BOOTSTRAP_IDENTIFIER) && password === 'admin123';
+  return isBootstrapAdmin ? 'admin' : 'employee';
+}
+
+async function ensureProfile(user, password) {
+  const profilePayload = {
+    id: user.id,
+    email: user.email,
+    role: getDefaultRole(user.email, password),
+    manager_id: null,
+    leave_mode: 'monthly_accrual',
+    hire_date: new Date().toISOString().slice(0, 10),
+    leave_balance: 0
+  };
+
+  const { error } = await supabase.from('users').upsert(profilePayload, { onConflict: 'id' });
+  if (error) throw error;
+}
 
 function renderConfigError(message) {
   app.innerHTML = `<section class="card" style="max-width:720px;margin:10vh auto;">
