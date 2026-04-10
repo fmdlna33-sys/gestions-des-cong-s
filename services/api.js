@@ -1,12 +1,18 @@
 import { supabase } from './supabase.js';
 
+function requireSupabase() {
+  if (!supabase) throw new Error('Supabase non configuré (URL/ANON KEY manquantes).');
+}
+
 export async function getProfile(userId) {
+  requireSupabase();
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
   if (error) throw error;
   return data;
 }
 
 export async function getLeaveRequests({ userId, role }) {
+  requireSupabase();
   let query = supabase.from('leave_requests').select('*, users(email, manager_id)').order('created_at', { ascending: false });
 
   if (role === 'employee') query = query.eq('user_id', userId);
@@ -17,12 +23,14 @@ export async function getLeaveRequests({ userId, role }) {
 }
 
 export async function getTeamMembers(managerId) {
+  requireSupabase();
   const { data, error } = await supabase.from('users').select('*').eq('manager_id', managerId);
   if (error) throw error;
   return data;
 }
 
 export async function getCalendarFeed(role, userId, managerId) {
+  requireSupabase();
   if (role === 'employee') {
     const { data, error } = await supabase
       .from('leave_requests')
@@ -51,18 +59,21 @@ export async function getCalendarFeed(role, userId, managerId) {
 }
 
 export async function getSpecialDays(table) {
+  requireSupabase();
   const { data, error } = await supabase.from(table).select('date,label').order('date');
   if (error) throw error;
   return data;
 }
 
 export async function createLeaveRequest(payload) {
+  requireSupabase();
   const { data, error } = await supabase.from('leave_requests').insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
 export async function updateLeaveRequest(id, patch) {
+  requireSupabase();
   const { data, error } = await supabase.from('leave_requests').update(patch).eq('id', id).select().single();
   if (error) throw error;
   return data;

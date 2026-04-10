@@ -61,6 +61,10 @@ Configurer:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
+Si tu lances en HTML statique pur (sans Vite), tu peux aussi définir avant les modules:
+- `window.SUPABASE_URL`
+- `window.SUPABASE_ANON_KEY`
+
 ## Lancement local
 ```bash
 python3 -m http.server 4173

@@ -6,10 +6,26 @@ import { toast } from '../components/ui.js';
 const app = document.getElementById('app');
 
 async function bootLogin() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    const profile = await getProfile(session.user.id);
-    redirectForRole(profile.role);
+  if (!supabase) {
+    app.innerHTML = `
+      <section class="card" style="max-width:700px;margin:8vh auto;">
+        <h2>Configuration Supabase manquante</h2>
+        <p>Ajoute tes clés avant de te connecter :</p>
+        <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
+        <p class="muted">Tu peux aussi les injecter via Vite avec VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.</p>
+      </section>`;
+    return;
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const profile = await getProfile(session.user.id);
+      redirectForRole(profile.role);
+      return;
+    }
+  } catch (error) {
+    app.innerHTML = `<section class="card" style="max-width:700px;margin:8vh auto;"><h2>Erreur de session</h2><p>${error.message}</p></section>`;
     return;
   }
 
@@ -38,9 +54,13 @@ async function bootLogin() {
     }
     if (error) return toast(error.message);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const profile = await getProfile(session.user.id);
-    redirectForRole(profile.role);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const profile = await getProfile(session.user.id);
+      redirectForRole(profile.role);
+    } catch (profileError) {
+      toast(`Compte authentifié mais profil introuvable: ${profileError.message}`);
+    }
   });
 }
 

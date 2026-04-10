@@ -8,6 +8,7 @@ const roleRoute = {
 };
 
 export async function getSessionUser() {
+  if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();
   return session?.user || null;
 }
@@ -18,6 +19,15 @@ export function redirectForRole(role) {
 }
 
 export async function requireRole(expectedRole) {
+  if (!supabase) {
+    document.getElementById('app').innerHTML = `
+      <section class="card" style="max-width:700px;margin:8vh auto;">
+        <h2>Configuration requise</h2>
+        <p>Ajoute les clés Supabase pour utiliser l'application.</p>
+        <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
+      </section>`;
+    return null;
+  }
   const user = await getSessionUser();
   if (!user) {
     window.location.href = '/';
