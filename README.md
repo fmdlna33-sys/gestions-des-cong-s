@@ -52,9 +52,11 @@ Application SaaS moderne de gestion des congés avec **page de connexion dédié
 
 ## Installation Supabase
 1. Créer le projet Supabase.
-2. Exécuter `db/schema.sql` puis `db/seed.sql`.
-3. Créer les utilisateurs Auth (employee/manager/admin).
-4. Mettre à jour les UUID dans `public.users`.
+2. Exécuter `db/schema.sql` (nouvelle version complète qui recrée les tables + policies + trigger).
+3. Créer vos comptes dans Supabase Auth.
+4. Le profil applicatif est créé automatiquement dans `public.users` à chaque nouvel utilisateur Auth.
+5. Pour bootstrap l'admin, créez un compte `evan.sarrazin` (ou `evan.sarrazin@...`) : il sera automatiquement en rôle `admin`.
+6. Exécuter ensuite `db/seed.sql` pour charger jours fériés et fermetures.
 
 ## Variables d'environnement
 Configurer:
