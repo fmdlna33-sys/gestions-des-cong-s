@@ -41,6 +41,7 @@ Application SaaS moderne de gestion des congés avec **page de connexion dédié
 ```
 
 ## Fonctionnalités
+- Sur la page de connexion, utilisez le mode **Connexion** ou **Créer un compte** (pas de création automatique après échec, pour éviter `email rate limit exceeded`).
 - Auth email/password via Supabase.
 - Redirection automatique selon rôle après connexion.
 - Workflow: `pending_manager` → `pending_admin` → `approved/rejected`.

@@ -41,6 +41,19 @@ async function redirectWithProfile(user) {
   redirectForRole(profile.role);
 }
 
+function renderConfigError(message) {
+  app.innerHTML = `<section class="card" style="max-width:720px;margin:10vh auto;">
+      <h2>Configuration requise</h2>
+      <p>${message}</p>
+      <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
+    </section>`;
+}
+
+async function redirectWithProfile(user) {
+  const profile = await getProfile(user.id);
+  redirectForRole(profile.role);
+}
+
 async function bootLogin() {
   if (!supabase) {
     renderConfigError('Supabase non configuré.');
@@ -62,13 +75,32 @@ async function bootLogin() {
     <section class="auth-shell card">
       <h1>FlowLeave</h1>
       <p class="muted">Connectez-vous ou créez votre compte.</p>
-      <form id="auth-form" class="grid">
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px;">
+        <button id="mode-login" class="ghost" type="button">Connexion</button>
+        <button id="mode-signup" class="ghost" type="button">Créer un compte</button>
+      </div>
+      <form id="auth-form" class="grid" style="margin-top:10px;">
         <label>Email<input name="email" type="email" required /></label>
         <label>Mot de passe<input name="password" type="password" minlength="6" required /></label>
-        <button type="submit">Connexion / Inscription</button>
+        <button id="submit-btn" type="submit">Se connecter</button>
       </form>
-      <p class="muted" style="margin:0;">Bootstrap admin: identifiant <strong>evan.sarrazin</strong> (ou evan.sarrazin@...) puis mot de passe de votre choix (6+).</p>
+      <p id="auth-help" class="muted" style="margin:0;">Mode connexion actif.</p>
     </section>`;
+
+  let mode = 'login';
+  const submitBtn = document.getElementById('submit-btn');
+  const help = document.getElementById('auth-help');
+
+  function setMode(nextMode) {
+    mode = nextMode;
+    submitBtn.textContent = mode === 'login' ? 'Se connecter' : 'Créer le compte';
+    help.textContent = mode === 'login'
+      ? 'Mode connexion actif.'
+      : 'Mode création de compte actif (évite les tentatives automatiques et les erreurs de rate-limit).';
+  }
+
+  document.getElementById('mode-login').onclick = () => setMode('login');
+  document.getElementById('mode-signup').onclick = () => setMode('signup');
 
   document.getElementById('auth-form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -82,19 +114,23 @@ async function bootLogin() {
       return;
     }
 
-    const signIn = await supabase.auth.signInWithPassword({ email, password });
-    if (!signIn.error && signIn.data.user) {
+    if (mode === 'login') {
+      const signIn = await supabase.auth.signInWithPassword({ email, password });
+      if (signIn.error) {
+        toast(`Connexion impossible: ${signIn.error.message}`);
+        return;
+      }
       await redirectWithProfile(signIn.data.user);
       return;
     }
 
     const signUp = await supabase.auth.signUp({ email, password });
     if (signUp.error) {
-      toast(signUp.error.message);
+      toast(`Création impossible: ${signUp.error.message}`);
       return;
     }
 
-    toast('Compte créé. Si la confirmation email est active, validez votre adresse puis reconnectez-vous.');
+    toast('Compte créé. Si la confirmation email est active, validez votre adresse puis connectez-vous.');
 
     if (signUp.data.user && signUp.data.session) {
       await redirectWithProfile(signUp.data.user);
