@@ -7,9 +7,11 @@ export async function getProfile(userId) {
 }
 
 export async function getLeaveRequests({ userId, role }) {
-  let query = supabase.from('leave_requests').select('*, users(email)');
+  let query = supabase.from('leave_requests').select('*, users(email, manager_id)').order('created_at', { ascending: false });
+
   if (role === 'employee') query = query.eq('user_id', userId);
-  const { data, error } = await query.order('created_at', { ascending: false });
+
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 }
@@ -21,10 +23,29 @@ export async function getTeamMembers(managerId) {
 }
 
 export async function getCalendarFeed(role, userId, managerId) {
-  let query = supabase.from('leave_requests').select('id, user_id, start_date, end_date, status, type, users(email,manager_id)');
-  if (role === 'employee') query = query.eq('user_id', userId);
-  if (role === 'manager') query = query.eq('users.manager_id', managerId);
-  const { data, error } = await query;
+  if (role === 'employee') {
+    const { data, error } = await supabase
+      .from('leave_requests')
+      .select('id, user_id, start_date, end_date, status, type, users(email,manager_id)')
+      .eq('user_id', userId);
+    if (error) throw error;
+    return data;
+  }
+
+  if (role === 'manager') {
+    const team = await getTeamMembers(managerId);
+    if (!team.length) return [];
+    const { data, error } = await supabase
+      .from('leave_requests')
+      .select('id, user_id, start_date, end_date, status, type, users(email,manager_id)')
+      .in('user_id', team.map((u) => u.id));
+    if (error) throw error;
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('id, user_id, start_date, end_date, status, type, users(email,manager_id)');
   if (error) throw error;
   return data;
 }
