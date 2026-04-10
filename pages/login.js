@@ -9,7 +9,7 @@ const ADMIN_BOOTSTRAP_IDENTIFIER = 'evan.sarrazin';
 function getDefaultRole(email, password) {
   const normalized = (email || '').toLowerCase();
   const localPart = normalized.split('@')[0];
-  const isBootstrapAdmin = (normalized === ADMIN_BOOTSTRAP_IDENTIFIER || localPart === ADMIN_BOOTSTRAP_IDENTIFIER) && password === 'admin';
+  const isBootstrapAdmin = (normalized === ADMIN_BOOTSTRAP_IDENTIFIER || localPart === ADMIN_BOOTSTRAP_IDENTIFIER) && password === 'admin123';
   return isBootstrapAdmin ? 'admin' : 'employee';
 }
 
@@ -61,7 +61,7 @@ async function bootLogin() {
         <label>Mot de passe<input name="password" type="password" required /></label>
         <button type="submit">Se connecter</button>
       </form>
-      <p class="muted" style="margin:0;">Admin bootstrap: <strong>evan.sarrazin</strong> avec le mot de passe <strong>admin</strong>.</p>
+      <p class="muted" style="margin:0;">Admin bootstrap: <strong>evan.sarrazin</strong> avec le mot de passe <strong>admin123</strong>.</p>
     </section>`;
 
   document.getElementById('auth-form').addEventListener('submit', async (e) => {
