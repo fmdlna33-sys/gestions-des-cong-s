@@ -12,7 +12,7 @@ async function bootLogin() {
         <h2>Configuration Supabase manquante</h2>
         <p>Ajoute tes clés avant de te connecter :</p>
         <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
-        <p class="muted">Tu peux aussi les injecter via Vite avec VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.</p>
+        <p class="muted">Vercel lit aussi automatiquement les variables via /api/env.</p>
       </section>`;
     return;
   }

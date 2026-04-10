@@ -25,6 +25,7 @@ export async function requireRole(expectedRole) {
         <h2>Configuration requise</h2>
         <p>Ajoute les clés Supabase pour utiliser l'application.</p>
         <pre>window.SUPABASE_URL = 'https://xxx.supabase.co'\nwindow.SUPABASE_ANON_KEY = '...'</pre>
+        <p class="muted">Si tu es sur Vercel, vérifie les variables SUPABASE_URL et SUPABASE_ANON_KEY.</p>
       </section>`;
     return null;
   }

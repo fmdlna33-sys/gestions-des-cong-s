@@ -60,10 +60,14 @@ Application SaaS moderne de gestion des congés avec **page de connexion dédié
 Configurer:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 
 Si tu lances en HTML statique pur (sans Vite), tu peux aussi définir avant les modules:
 - `window.SUPABASE_URL`
 - `window.SUPABASE_ANON_KEY`
+
+Sur Vercel, les variables sont lues automatiquement via l'endpoint serverless `api/env.js`.
 
 ## Lancement local
 ```bash
